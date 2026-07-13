@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>매물장부</title>
+<style>
+  :root {
+    --ink: #16324a;
+    --ink-soft: #4b6478;
+    --ink-faint: #8aa0b2;
+    --sky: #3d87c8;
+    --sky-deep: #2b6ba5;
+    --sky-tint: #e9f2fa;
+    --paper: #f7f9fb;
+    --card: #ffffff;
+    --line: #dde6ee;
+    --stamp-red: #c94f45;
+    --ok-green: #2e8b57;
+    --radius: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background: var(--paper); color: var(--ink);
+    font-family: "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-size: 15px; line-height: 1.5; }
+  .num { font-family: "SF Mono", "Roboto Mono", Consolas, monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+  header { background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top:0; z-index: 20; }
+  .head-inner { max-width: 860px; margin: 0 auto; padding: 14px 16px 0; }
+  .brand { display:flex; align-items: baseline; gap: 8px; }
+  .brand h1 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+  .brand .sub { font-size: 12px; color: var(--ink-faint); }
+  nav { display:flex; gap: 2px; margin-top: 10px; }
+  nav button { flex:0 0 auto; padding: 9px 16px; border:none; background:none; font-size: 14.5px; font-weight: 600;
+    color: var(--ink-soft); border-bottom: 2.5px solid transparent; cursor:pointer; font-family: inherit; }
+  nav button.active { color: var(--sky-deep); border-bottom-color: var(--sky); }
+
+  main { max-width: 860px; margin: 0 auto; padding: 18px 16px 90px; }
+  .tab { display:none; }
+  .tab.active { display:block; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .panel h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .hint { font-size: 12.5px; color: var(--ink-faint); }
+
+  textarea { width:100%; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font: inherit;
+    resize: vertical; min-height: 130px; background: #fdfdfe; color: var(--ink); }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--sky); outline-offset: 1px; border-color: var(--sky); }
+
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; border:none; cursor:pointer;
+    font: inherit; font-weight: 700; border-radius: 8px; padding: 11px 18px; }
+  .btn-primary { background: var(--sky); color:#fff; }
+  .btn-primary:hover { background: var(--sky-deep); }
+  .btn-ghost { background: var(--sky-tint); color: var(--sky-deep); }
+  .btn-ghost:hover { background: #dcebf7; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 6px; }
+
+  .row-actions { display:flex; gap:8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* form grid */
+  .fgrid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .fitem { display:flex; flex-direction: column; gap: 4px; }
+  .fitem label { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+  .fitem input, .fitem select { border: 1px solid var(--line); border-radius: 7px; padding: 8px 9px; font: inherit; background:#fdfdfe; color: var(--ink); width: 100%; }
+  .fitem.wide { grid-column: span 4; }
+  .fitem.half { grid-column: span 2; }
+  @media (max-width: 640px) {
+    .fgrid { grid-template-columns: repeat(2, 1fr); }
+    .fitem.wide { grid-column: span 2; }
+    .fitem.half { grid-column: span 2; }
+  }
+
+  /* filters */
+  .filters { display:flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .filters select, .filters input[type=text], .filters input[type=number] {
+    border: 1px solid var(--line); border-radius: 7px; padding: 7px 9px; font: inherit; font-size: 13.5px; background:#fff; color: var(--ink); }
+  .filters input[type=text] { flex: 1 1 140px; min-width: 120px; }
+  .filters input[type=number] { width: 84px; }
+  .price-label { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+  .pricebox { width: 78px !important; }
+  .pricebox.sm { width: 62px !important; }
+  .tilde { color: var(--ink-faint); font-size: 13px; }
+  .price-hint { font-size: 11.5px; color: var(--ink-faint); margin-left: 4px; }
+
+  .ai-box { display:flex; gap:8px; margin-top: 10px; }
+  .ai-box input { flex:1; border: 1.5px solid var(--sky); border-radius: 8px; padding: 10px 12px; font: inherit; background:#fff; color: var(--ink); }
+  .ai-answer { margin-top: 10px; background: var(--sky-tint); border-radius: 8px; padding: 11px 13px; font-size: 14px; color: var(--sky-deep); display:none; }
+
+  /* cards */
+  .count-line { display:flex; justify-content: space-between; align-items:center; margin: 14px 2px 8px; }
+  .count-line .cnt { font-size: 13px; color: var(--ink-soft); }
+  .cards { display:flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; position: relative; }
+  .card .top { display:flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .card .title { font-size: 15.5px; font-weight: 800; letter-spacing: -0.01em; }
+  .card .addr { font-size: 12.5px; color: var(--ink-faint); margin-top: 1px; }
+  .card .price { font-size: 16px; font-weight: 800; color: var(--sky-deep); margin-top: 7px; }
+  .card .price .ttype { font-size: 12px; font-weight: 700; color: #fff; background: var(--sky); border-radius: 4px; padding: 1.5px 7px; margin-right: 7px; vertical-align: 2px; }
+  .chips { display:flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+  .chip { font-size: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; padding: 2.5px 8px; color: var(--ink-soft); }
+  .chip.on { background: var(--sky-tint); border-color: #c3dcf0; color: var(--sky-deep); font-weight: 600; }
+  .chip.warn { background: #fdf1ef; border-color: #f0d4d0; color: var(--stamp-red); }
+  .memo { margin-top: 9px; font-size: 13px; color: var(--ink-soft); background: var(--paper); border-radius: 7px; padding: 9px 11px; white-space: pre-wrap; }
+  .violation { display:inline-flex; align-items:center; gap:5px; margin-top:9px; font-size: 12.5px; font-weight: 700;
+    color: var(--stamp-red); background: #fdf1ef; border: 1px solid #f0d4d0; border-radius: 6px; padding: 4px 10px; }
+  .idtag { font-size: 11.5px; color: var(--ink-faint); }
+
+  /* 도장 stamp */
+  .stamp { flex: 0 0 auto; width: 52px; height: 52px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+    font-size: 12px; font-weight: 800; text-align:center; line-height: 1.15; transform: rotate(-8deg);
+    border: 2.5px solid currentColor; opacity: .85; }
+  .stamp.광고중 { color: var(--sky-deep); }
+  .stamp.계약중 { color: #b8860b; }
+  .stamp.거래완료 { color: var(--stamp-red); }
+  .stamp.보류 { color: var(--ink-faint); }
+
+  .card .foot { display:flex; justify-content: space-between; align-items:center; margin-top: 11px; }
+  .card .foot select { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; font-family: inherit; color: var(--ink-soft); background:#fff; }
+
+  .empty { text-align:center; color: var(--ink-faint); padding: 40px 0; font-size: 14px; }
+
+  /* 수정 모달 */
+  .modal-bg { display:none; position: fixed; inset: 0; background: rgba(22,50,74,.45); z-index: 100; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 30px 14px; }
+  .modal-bg.show { display: flex; }
+  .modal { background: var(--card); border-radius: 12px; width: 100%; max-width: 640px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  .modal h2 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .modal .mid { font-size: 12px; color: var(--ink-faint); margin-bottom: 14px; }
+  .modal .mgrid { display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .modal .mitem { display:flex; flex-direction: column; gap: 3px; }
+  .modal .mitem.full { grid-column: span 2; }
+  .modal .mitem label { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); }
+  .modal .mitem input, .modal .mitem textarea, .modal .mitem select { border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; font: inherit; font-size: 13px; background:#fdfdfe; color: var(--ink); width:100%; }
+  .modal .mitem textarea { min-height: 70px; resize: vertical; }
+  @media (max-width: 560px) { .modal .mgrid { grid-template-columns: 1fr; } .modal .mitem.full { grid-column: span 1; } }
+  .modal .mfoot { display:flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+  /* toast */
+  #toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--ink); color:#fff;
+    padding: 11px 20px; border-radius: 9px; font-size: 14px; opacity: 0; pointer-events:none; transition: all .25s; z-index: 50; max-width: 90vw; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+
+  .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; display:none; }
+  .btn-ghost .spinner { border-color: rgba(43,107,165,.3); border-top-color: var(--sky-deep); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading .spinner { display: inline-block; }
+
+  code.block { display:block; background: #f2f5f8; border:1px solid var(--line); border-radius: 8px; padding: 12px;
+    font-size: 12px; white-space: pre; overflow-x: auto; margin-top: 8px; max-height: 300px; overflow-y: auto; color: var(--ink); }
+  .steps { font-size: 13.5px; color: var(--ink-soft); margin-top: 8px; padding-left: 18px; }
+  .steps li { margin-bottom: 5px; }
+  input.cfg { width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 10px 11px; font: inherit; font-size: 13px; background:#fdfdfe; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <div class="brand"><h1>매물장부</h1><span class="sub">설명하면 정리되는 매물 관리</span></div>
+    <nav>
+      <button id="nav-add" class="active" onclick="showTab('add')">등록</button>
+      <button id="nav-search" onclick="showTab('search')">검색</button>
+      <button id="nav-settings" onclick="showTab('settings')">설정</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ============ 등록 ============ -->
+<section id="tab-add" class="tab active">
+  <div class="panel">
+    <h2>매물 설명을 그대로 적어주세요</h2>
+    <p class="hint" style="margin-bottom:8px">전화 받으면서 메모하듯 편하게 쓰면, AI가 알아서 항목별로 정리합니다. 건축물대장 내용을 붙여넣으면 연식·면적·위반건축물까지 채워집니다.</p>
+    <textarea id="rawText" placeholder="예) 수유동 해찬가 401호 매매 2억300. 방3 욕실1, 4층/5층 엘베 없음 주차 1대 가능. 전용 59. 세입자 있어서 집은 화요일 오후만 볼 수 있음. 이사날짜 9월 중 협의. 주인이 급하진 않다고 함."></textarea>
+    <div class="row-actions">
+      <button id="btnParse" class="btn btn-primary" onclick="parseListing()"><span class="spinner"></span>AI로 정리하기</button>
+      <button class="btn btn-ghost" onclick="clearForm(true)">비우기</button>
+    </div>
+  </div>
+
+  <div class="panel" id="formPanel" style="display:none">
+    <h2>정리된 내용 확인 <span class="hint" style="font-weight:400">— 틀린 곳은 바로 고치세요</span></h2>
+    <div class="fgrid">
+      <div class="fitem half"><label>주소</label><input id="f_주소"></div>
+      <div class="fitem half"><label>단지·건물명</label><input id="f_단지건물명"></div>
+      <div class="fitem"><label>동/호</label><input id="f_동호"></div>
+      <div class="fitem"><label>거래유형</label>
+        <select id="f_거래유형"><option>매매</option><option>전세</option><option>월세</option><option>매매+전세</option><option>매매+월세</option><option>전세+월세</option></select></div>
+      <div class="fitem"><label>매매가 (만원)</label><input id="f_매매가" type="number" class="num"></div>
+      <div class="fitem"><label>보증금 (만원)</label><input id="f_보증금" type="number" class="num"></div>
+      <div class="fitem"><label>월세 (만원)</label><input id="f_월세" type="number" class="num"></div>
+      <div class="fitem"><label>전용면적 (㎡)</label><input id="f_전용면적" type="number" step="0.01" class="num"></div>
+      <div class="fitem"><label>공급면적 (㎡)</label><input id="f_공급면적" type="number" step="0.01" class="num"></div>
+      <div class="fitem"><label>대지면적 (㎡)</label><input id="f_대지면적" type="number" step="0.01" class="num"></div>
+      <div class="fitem"><label>연면적 (㎡)</label><input id="f_연면적" type="number" step="0.01" class="num"></div>
+      <div class="fitem"><label>방수</label><input id="f_방수" type="number" class="num"></div>
+      <div class="fitem"><label>욕실수</label><input id="f_욕실수" type="number" class="num"></div>
+      <div class="fitem"><label>해당층</label><input id="f_해당층" class="num"></div>
+      <div class="fitem"><label>총층</label><input id="f_총층" class="num"></div>
+      <div class="fitem"><label>방향 (거실 기준)</label><input id="f_방향" placeholder="예: 남향(거실)"></div>
+      <div class="fitem"><label>엘리베이터</label>
+        <select id="f_엘리베이터"><option>미확인</option><option>O</option><option>X</option></select></div>
+      <div class="fitem"><label>주차 (세대당 대수)</label><input id="f_주차" type="number" step="0.01" class="num" placeholder="예: 1 / 0.75 / 0"></div>
+      <div class="fitem"><label>건폐율/용적률</label><input id="f_건폐율용적률" placeholder="예: 51.2%/101.6%"></div>
+      <div class="fitem"><label>위반건축물</label>
+        <select id="f_위반건축물"><option>미확인</option><option>없음</option><option>해당</option></select></div>
+      <div class="fitem"><label>사용승인일</label><input id="f_사용승인일" placeholder="예: 1998-05-20"></div>
+      <div class="fitem"><label>관리비 (만원)</label><input id="f_관리비" type="number" step="0.1" class="num" placeholder="포함내역은 비고에"></div>
+      <div class="fitem half"><label>입주가능일</label><input id="f_입주가능일" placeholder="예: 2026-09-15 / 9월 중"></div>
+      <div class="fitem half"><label>입주 확정여부</label>
+        <select id="f_입주확정여부"><option>미정</option><option>확정</option><option>협의가능</option></select></div>
+      <div class="fitem"><label>공시가격 (만원)</label><input id="f_공시가격" type="number" class="num"></div>
+      <div class="fitem"><label>공시가 기준연도</label><input id="f_공시가기준연도" type="number" class="num" placeholder="예: 2026"></div>
+      <div class="fitem half"><label>집주인 연락처</label><input id="f_집주인연락처" placeholder="010-"></div>
+      <div class="fitem half"><label>세입자 연락처</label><input id="f_세입자연락처" placeholder="010-"></div>
+      <div class="fitem wide"><label>비고 — 집 사정, 볼 수 있는 시간, 주인 성향, 조정 여지 전부 여기에</label>
+        <textarea id="f_비고" style="min-height:80px"></textarea></div>
+    </div>
+    <div class="row-actions">
+      <button id="btnSave" class="btn btn-primary" onclick="saveListing()"><span class="spinner"></span>시트에 저장</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 검색 ============ -->
+<section id="tab-search" class="tab">
+  <div class="panel">
+    <h2>주관식으로 물어보기</h2>
+    <div class="ai-box">
+      <input id="aiQuery" placeholder="예) 9월 입주 가능하고 엘베 있는 3층 이하, 주말에 집 볼 수 있는 곳" onkeydown="if(event.key==='Enter')aiSearch()">
+      <button id="btnAi" class="btn btn-primary" onclick="aiSearch()"><span class="spinner"></span>AI 검색</button>
+    </div>
+    <div id="aiAnswer" class="ai-answer"></div>
+  </div>
+
+  <div class="panel">
+    <h2>빠른 필터</h2>
+    <div class="filters">
+      <select id="q_상태" onchange="renderCards()"><option value="">상태 전체</option><option>광고중</option><option>계약중</option><option>거래완료</option><option>보류</option></select>
+      <select id="q_거래유형" onchange="renderCards()"><option value="">유형 전체</option><option>매매</option><option>전세</option><option>월세</option></select>
+      <select id="q_엘리베이터" onchange="renderCards()"><option value="">엘베 전체</option><option>O</option><option>X</option><option>미확인</option></select>
+      <input id="q_주차" type="number" step="0.01" placeholder="주차 최소(세대당)" oninput="renderCards()" style="width:120px">
+      <input id="q_방수" type="number" min="1" placeholder="방 최소" oninput="renderCards()">
+      <input id="q_text" type="text" placeholder="주소·단지명·비고 검색" oninput="renderCards()">
+    </div>
+    <div class="filters" style="margin-top:8px">
+      <span class="price-label">매매가</span>
+      <input id="q_매매가_min" type="number" placeholder="최소" oninput="renderCards()" class="pricebox">
+      <span class="tilde">~</span>
+      <input id="q_매매가_max" type="number" placeholder="최대" oninput="renderCards()" class="pricebox">
+      <span class="price-label" style="margin-left:6px">보증금</span>
+      <input id="q_보증금_min" type="number" placeholder="최소" oninput="renderCards()" class="pricebox">
+      <span class="tilde">~</span>
+      <input id="q_보증금_max" type="number" placeholder="최대" oninput="renderCards()" class="pricebox">
+      <span class="price-label" style="margin-left:6px">월세</span>
+      <input id="q_월세_min" type="number" placeholder="최소" oninput="renderCards()" class="pricebox sm">
+      <span class="tilde">~</span>
+      <input id="q_월세_max" type="number" placeholder="최대" oninput="renderCards()" class="pricebox sm">
+      <span class="price-hint">단위: 만원 (3억 = 30000)</span>
+    </div>
+    <div class="filters" style="margin-top:8px">
+      <span class="price-label">준공연도</span>
+      <input id="q_연식_min" type="number" placeholder="예: 1980" oninput="renderCards()" style="width:96px">
+      <span class="tilde">~</span>
+      <input id="q_연식_max" type="number" placeholder="예: 2020" oninput="renderCards()" style="width:96px">
+      <span class="price-hint">사용승인 연도 기준</span>
+    </div>
+  </div>
+
+  <div class="count-line">
+    <span class="cnt" id="countLine">-</span>
+    <button class="btn btn-ghost btn-sm" id="btnReload" onclick="loadRows(true)"><span class="spinner"></span>새로고침</button>
+  </div>
+  <div class="cards" id="cards"></div>
+  <div class="empty" id="emptyMsg" style="display:none">표시할 매물이 없습니다</div>
+</section>
+
+<!-- ============ 설정 ============ -->
+<section id="tab-settings" class="tab">
+  <div class="panel">
+    <h2>Apps Script 연결</h2>
+    <p class="hint" style="margin-bottom:8px">배포된 웹앱 URL을 붙여넣고 저장하세요. (jinbody 때랑 같은 방식)</p>
+    <input class="cfg" id="cfgUrl" placeholder="https://script.google.com/macros/s/........./exec">
+    <div class="row-actions">
+      <button class="btn btn-primary" onclick="saveConfig()">저장</button>
+      <button class="btn btn-ghost" id="btnTest" onclick="testConnection()"><span class="spinner"></span>연결 테스트</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>처음 설정하는 방법</h2>
+    <ol class="steps">
+      <li>구글 시트 새로 만들기 → 시트(탭) 이름을 <b>매물</b>로 변경</li>
+      <li>확장 프로그램 → Apps Script → 아래 코드 전체 붙여넣기</li>
+      <li>배포 → 새 배포 → 유형: <b>웹 앱</b> / 실행: <b>나</b> / 액세스: <b>모든 사용자</b></li>
+      <li>나온 URL을 위 칸에 붙여넣고 저장</li>
+    </ol>
+    <p class="hint" style="margin-top:10px">헤더(1행)는 첫 저장 때 자동으로 만들어집니다.</p>
+    <button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="copyScript()">코드 복사</button>
+    <code class="block" id="gasCode">const SHEET_NAME = '매물';
+const HEADERS = ['매물번호','등록일','상태','주소','단지건물명','동호','거래유형','매매가','보증금','월세','전용면적','공급면적','대지면적','연면적','방수','욕실수','해당층','총층','방향','엘리베이터','주차','건폐율용적률','위반건축물','사용승인일','관리비','입주가능일','입주확정여부','공시가격','공시가기준연도','집주인연락처','세입자연락처','비고'];
+
+function getSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) sh = ss.insertSheet(SHEET_NAME);
+  if (sh.getLastRow() === 0) sh.appendRow(HEADERS);
+  return sh;
+}
+
+function doGet(e) {
+  const sh = getSheet_();
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const rows = data.slice(1).map(r => {
+    const o = {};
+    headers.forEach((h, i) => o[h] = r[i]);
+    return o;
+  });
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, rows }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const sh = getSheet_();
+  const body = JSON.parse(e.postData.contents);
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+
+  if (body.action === 'add') {
+    const nums = sh.getLastRow() > 1
+      ? sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().flat() : [];
+    let max = 0;
+    nums.forEach(v => {
+      const m = String(v).match(/^M(\d+)$/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    const id = 'M' + String(max + 1).padStart(3, '0');
+    body.data['매물번호'] = id;
+    body.data['등록일'] = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+    sh.appendRow(headers.map(h => body.data[h] !== undefined ? body.data[h] : ''));
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, id }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (body.action === 'update') {
+    const ids = sh.getRange(2, 1, Math.max(sh.getLastRow() - 1, 1), 1).getValues().flat();
+    const idx = ids.indexOf(body['매물번호']);
+    if (idx === -1) return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'not found' }))
+      .setMimeType(ContentService.MimeType.JSON);
+    const row = idx + 2;
+    Object.keys(body.data).forEach(k => {
+      const c = headers.indexOf(k);
+      if (c !== -1) sh.getRange(row, c + 1).setValue(body.data[k]);
+    });
+    return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ ok: false, error: 'unknown action' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</code>
+  </div>
+</section>
+
+</main>
+
+<div id="toast"></div>
+
+<!-- 수정 모달 -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <h2 id="editTitle">매물 수정</h2>
+    <div class="mid" id="editSub"></div>
+    <div class="mgrid" id="editGrid"></div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="closeEdit()">취소</button>
+      <button class="btn btn-primary" id="btnSaveEdit" onclick="saveEdit()"><span class="spinner"></span>저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== state ===================== */
+const FIELDS = ['주소','단지건물명','동호','거래유형','매매가','보증금','월세','전용면적','공급면적','대지면적','연면적','방수','욕실수','해당층','총층','방향','엘리베이터','주차','건폐율용적률','위반건축물','사용승인일','관리비','입주가능일','입주확정여부','공시가격','공시가기준연도','집주인연락처','세입자연락처','비고'];
+let gasUrl = '';
+let rows = [];
+let aiFilterIds = null; // null = AI 필터 미적용
+
+/* ===================== boot ===================== */
+(async function init() {
+  try {
+    const r = await window.storage.get('bmt:config');
+    if (r && r.value) {
+      const cfg = JSON.parse(r.value);
+      gasUrl = cfg.gasUrl || '';
+      document.getElementById('cfgUrl').value = gasUrl;
+    }
+  } catch (e) { /* 설정 없음 */ }
+  if (!gasUrl) showTab('settings');
+})();
+
+/* ===================== ui ===================== */
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'search' && rows.length === 0 && gasUrl) loadRows(false);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function setLoading(btnId, on) {
+  const b = document.getElementById(btnId);
+  b.classList.toggle('loading', on);
+  b.disabled = on;
+}
+
+/* ===================== settings ===================== */
+async function saveConfig() {
+  gasUrl = document.getElementById('cfgUrl').value.trim();
+  try {
+    await window.storage.set('bmt:config', JSON.stringify({ gasUrl }));
+    toast('저장했습니다');
+  } catch (e) { toast('저장 실패: ' + e.message); }
+}
+
+async function testConnection() {
+  const url = document.getElementById('cfgUrl').value.trim();
+  if (!url) return toast('URL을 먼저 입력하세요');
+  setLoading('btnTest', true);
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.ok) toast('연결 성공! 현재 매물 ' + data.rows.length + '건');
+    else toast('응답은 왔지만 형식이 다릅니다');
+  } catch (e) { toast('연결 실패: 배포 설정(모든 사용자)을 확인하세요'); }
+  setLoading('btnTest', false);
+}
+
+function copyScript() {
+  navigator.clipboard.writeText(document.getElementById('gasCode').textContent)
+    .then(() => toast('코드를 복사했습니다'))
+    .catch(() => toast('복사 실패 — 직접 드래그해서 복사하세요'));
+}
+
+/* ===================== claude api ===================== */
+async function callClaude(prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || 'API 오류');
+  return data.content.filter(c => c.type === 'text').map(c => c.text).join('\n');
+}
+
+function parseJsonLoose(text) {
+  const clean = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(clean);
+}
+
+/* ===================== 등록 ===================== */
+async function parseListing() {
+  const raw = document.getElementById('rawText').value.trim();
+  if (!raw) return toast('매물 설명을 먼저 적어주세요');
+  setLoading('btnParse', true);
+  try {
+    const prompt = `다음은 부동산 매물 설명 메모입니다. 아래 JSON 형식으로만 응답하세요. 마크다운이나 설명 없이 JSON 객체 하나만 출력합니다.
+
+필드:
+- 주소, 단지건물명, 동호: 문자열 (모르면 "")
+- 거래유형: "매매"|"전세"|"월세"|"매매+전세"|"매매+월세"|"전세+월세"
+- 매매가, 보증금, 월세: 숫자, 단위 만원 (예: 2억300만원 → 20300, 없으면 "")
+- 전용면적, 공급면적, 대지면적, 연면적: 숫자(㎡). 평이면 ㎡로 환산(1평=3.3058), 소수 둘째 반올림. 모르면 ""
+- 방수, 욕실수: 숫자 (모르면 "")
+- 해당층, 총층: 숫자만 (네이버가 "고/중/저"로만 주면 총층 참고해 추정하되 불확실하면 비고에 원문 남기고 해당층은 "")
+- 방향: 거실 기준 방향 그대로 (예: "남향(거실)". 모르면 "")
+- 엘리베이터: "O"|"X"|"미확인" (건축물대장 엘리베이터 0대면 "X", 1대 이상이면 "O")
+- 주차: 숫자 = 세대당 대수 (총주차대수÷세대수. 예: 4세대 3대→0.75, "세대당 1대"→1, 0대→0). 모르면 ""
+- 건폐율용적률: "건폐율%/용적률%" 형식 문자열 (예: "51.2%/101.6%". 모르면 "")
+- 위반건축물: "해당"|"없음"|"미확인" (건축물대장에 위반건축물 표시 있으면 "해당")
+- 사용승인일: 날짜 문자열만 (예: "1975-11-18". 모르면 "")
+- 관리비: 숫자, 단위 만원 (모르면 ""). 포함내역(수도·인터넷·정화조 등)은 비고에
+- 입주가능일: 문자열 그대로 (예: "2026-09-15", "즉시입주") (모르면 "")
+- 입주확정여부: "확정"|"협의가능"|"미정"
+- 공시가격: 숫자, 단위 만원 (모르면 "")
+- 공시가기준연도: 숫자 4자리 (예: 2026, 모르면 "")
+- 집주인연락처, 세입자연락처: 문자열 (모르면 "")
+- 비고: 위 필드에 안 담기는 사정 정리. 관리비 포함내역, 안방 등 다른 공간 향, 집 보는 시간, 주인/세입자 사정, 조정 여지, 동시 매물 등.
+
+제외(비고에도 넣지 말 것): 취득세·세금·중개보수, 평당가, 최초게재일·"알터 제공" 등 출처표시.
+
+중요: 원문에 없는 정보를 지어내지 마세요. 애매하면 "미확인"/"미정"/"" 처리하고 비고에 원문 표현을 남기세요.
+
+매물 설명:
+${raw}`;
+    const out = await callClaude(prompt);
+    const j = parseJsonLoose(out);
+    FIELDS.forEach(f => {
+      const el = document.getElementById('f_' + f);
+      if (!el) return;
+      const v = j[f];
+      el.value = (v === undefined || v === null) ? '' : v;
+    });
+    // select 기본값 보정
+    ['거래유형','엘리베이터','위반건축물','입주확정여부'].forEach(f => {
+      const el = document.getElementById('f_' + f);
+      if (el.selectedIndex === -1 || el.value === '') el.selectedIndex = 0;
+    });
+    document.getElementById('formPanel').style.display = 'block';
+    document.getElementById('formPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('정리 완료 — 내용을 확인하세요');
+  } catch (e) { toast('정리 실패: ' + e.message); }
+  setLoading('btnParse', false);
+}
+
+function clearForm(all) {
+  if (all) document.getElementById('rawText').value = '';
+  FIELDS.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (!el) return;
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.getElementById('formPanel').style.display = 'none';
+}
+
+async function saveListing() {
+  if (!gasUrl) { toast('설정에서 Apps Script URL을 먼저 연결하세요'); showTab('settings'); return; }
+  const data = {};
+  FIELDS.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (el) data[f] = el.value;
+  });
+  if (!data['주소'] && !data['단지건물명']) return toast('주소나 단지명은 있어야 합니다');
+  if (!data['상태']) data['상태'] = '광고중'; // 등록 시 자동
+  setLoading('btnSave', true);
+  try {
+    const res = await fetch(gasUrl, { method: 'POST', body: JSON.stringify({ action: 'add', data }) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || '저장 실패');
+    toast(out.id + ' 저장 완료');
+    clearForm(true);
+    rows = []; // 다음 검색 때 새로 불러오기
+  } catch (e) { toast('저장 실패: ' + e.message); }
+  setLoading('btnSave', false);
+}
+
+/* ===================== 검색 ===================== */
+async function loadRows(showToast) {
+  if (!gasUrl) { toast('설정에서 Apps Script URL을 먼저 연결하세요'); showTab('settings'); return; }
+  setLoading('btnReload', true);
+  try {
+    const res = await fetch(gasUrl);
+    const data = await res.json();
+    rows = data.rows || [];
+    aiFilterIds = null;
+    document.getElementById('aiAnswer').style.display = 'none';
+    renderCards();
+    if (showToast) toast('불러왔습니다 (' + rows.length + '건)');
+  } catch (e) { toast('불러오기 실패: ' + e.message); }
+  setLoading('btnReload', false);
+}
+
+function fmtPrice(r) {
+  const uk = n => {
+    n = Number(n);
+    if (!n) return '';
+    const eok = Math.floor(n / 10000), man = n % 10000;
+    if (eok && man) return eok + '억 ' + man.toLocaleString();
+    if (eok) return eok + '억';
+    return man.toLocaleString();
+  };
+  const t = String(r['거래유형'] || '');
+  const parts = [];
+  if (r['매매가']) parts.push('매매 ' + uk(r['매매가']));
+  if (r['월세']) parts.push((t.includes('월세') ? '월세 ' : '') + uk(r['보증금']) + ' / ' + Number(r['월세']).toLocaleString());
+  else if (r['보증금']) parts.push('전세 ' + uk(r['보증금']));
+  return parts.join(' · ') || '-';
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderCards() {
+  const gv = id => { const el = document.getElementById(id); return el && el.value !== '' ? Number(el.value) : null; };
+  const q = {
+    상태: document.getElementById('q_상태').value,
+    거래유형: document.getElementById('q_거래유형').value,
+    엘리베이터: document.getElementById('q_엘리베이터').value,
+    주차: document.getElementById('q_주차').value,
+    방수: document.getElementById('q_방수').value,
+    text: document.getElementById('q_text').value.trim().toLowerCase(),
+    매매가_min: gv('q_매매가_min'), 매매가_max: gv('q_매매가_max'),
+    보증금_min: gv('q_보증금_min'), 보증금_max: gv('q_보증금_max'),
+    월세_min: gv('q_월세_min'), 월세_max: gv('q_월세_max'),
+    연식_min: gv('q_연식_min'), 연식_max: gv('q_연식_max')
+  };
+  const inRange = (val, min, max) => {
+    if (min === null && max === null) return true;
+    const n = Number(val || 0);
+    if (min !== null && n < min) return false;
+    if (max !== null && n > max) return false;
+    return true;
+  };
+  let list = rows.filter(r => {
+    if (q.상태 && String(r['상태']) !== q.상태) return false;
+    if (q.거래유형 && !String(r['거래유형']).includes(q.거래유형)) return false;
+    if (q.엘리베이터 && String(r['엘리베이터']) !== q.엘리베이터) return false;
+    if (q.주차 !== '' && q.주차 != null && Number(r['주차'] || 0) < Number(q.주차)) return false;
+    if (q.방수 && Number(r['방수'] || 0) < Number(q.방수)) return false;
+    if (!inRange(r['매매가'], q.매매가_min, q.매매가_max)) return false;
+    if (!inRange(r['보증금'], q.보증금_min, q.보증금_max)) return false;
+    if (!inRange(r['월세'], q.월세_min, q.월세_max)) return false;
+    if (q.연식_min !== null || q.연식_max !== null) {
+      const m = String(r['사용승인일'] || '').match(/(\d{4})/);
+      if (!m) return false;
+      const yr = Number(m[1]);
+      if (q.연식_min !== null && yr < q.연식_min) return false;
+      if (q.연식_max !== null && yr > q.연식_max) return false;
+    }
+    if (q.text) {
+      const hay = [r['주소'], r['단지건물명'], r['동호'], r['비고']].join(' ').toLowerCase();
+      if (!hay.includes(q.text)) return false;
+    }
+    if (aiFilterIds && !aiFilterIds.includes(String(r['매물번호']))) return false;
+    return true;
+  });
+
+  document.getElementById('countLine').textContent =
+    list.length + '건 표시' + (aiFilterIds ? ' (AI 검색 적용 중)' : '') + ' / 전체 ' + rows.length + '건';
+
+  const wrap = document.getElementById('cards');
+  wrap.innerHTML = '';
+  document.getElementById('emptyMsg').style.display = list.length ? 'none' : 'block';
+
+  list.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    const title = [r['단지건물명'], r['동호']].filter(Boolean).join(' ') || r['주소'] || '(이름 없음)';
+    const floor = (r['해당층'] || r['총층']) ? `${r['해당층'] || '?'}층/${r['총층'] || '?'}층` : '';
+    const area = r['전용면적'] ? `전용 ${r['전용면적']}㎡` : '';
+    const room = (r['방수'] || r['욕실수']) ? `방${r['방수'] || '?'}·욕${r['욕실수'] || '?'}` : '';
+    const move = r['입주가능일'] ? `입주 ${r['입주가능일']}${r['입주확정여부'] && r['입주확정여부'] !== '미정' ? ' (' + r['입주확정여부'] + ')' : ''}` : '';
+    const 엘 = String(r['엘리베이터'] || '');
+    const 주 = (r['주차'] !== '' && r['주차'] != null) ? String(r['주차']) : '';
+    const 방향 = String(r['방향'] || '');
+    const st = String(r['상태'] || '광고중');
+    const 위반 = String(r['위반건축물'] || '') === '해당';
+    const 연식 = r['사용승인일'] ? `승인 ${r['사용승인일']}` : '';
+    const 관리비 = r['관리비'] ? `관리비 ${Number(r['관리비']).toLocaleString()}만` : '';
+    const 건폐 = r['건폐율용적률'] ? `건폐/용적 ${r['건폐율용적률']}` : '';
+    let 공시 = '';
+    if (r['공시가격']) {
+      const uk = n => { n = Number(n); const e = Math.floor(n/10000), m = n%10000; return e && m ? `${e}억 ${m.toLocaleString()}` : e ? `${e}억` : m.toLocaleString(); };
+      공시 = `공시가 ${uk(r['공시가격'])}${r['공시가기준연도'] ? ' (' + r['공시가기준연도'] + ')' : ''}`;
+    }
+
+    el.innerHTML = `
+      <div class="top">
+        <div>
+          <div class="title">${esc(title)} <span class="idtag num">${esc(r['매물번호'])}</span></div>
+          <div class="addr">${esc(r['주소'] || '')}</div>
+          <div class="price num"><span class="ttype">${esc(r['거래유형'] || '-')}</span>${esc(fmtPrice(r))}</div>
+        </div>
+        <div class="stamp ${esc(st)}" ${st === '광고중' ? 'style="display:none"' : ''}>${esc(st)}</div>
+      </div>
+      <div class="chips">
+        ${floor ? `<span class="chip">${esc(floor)}</span>` : ''}
+        ${room ? `<span class="chip">${esc(room)}</span>` : ''}
+        ${area ? `<span class="chip">${esc(area)}</span>` : ''}
+        ${방향 ? `<span class="chip">${esc(방향)}</span>` : ''}
+        ${연식 ? `<span class="chip">${esc(연식)}</span>` : ''}
+        ${엘 ? `<span class="chip ${엘 === 'O' ? 'on' : 엘 === 'X' ? 'warn' : ''}">엘베 ${esc(엘)}</span>` : ''}
+        ${주 !== '' ? `<span class="chip ${Number(주) >= 1 ? 'on' : Number(주) === 0 ? 'warn' : ''}">주차 세대당 ${esc(주)}</span>` : ''}
+        ${건폐 ? `<span class="chip">${esc(건폐)}</span>` : ''}
+        ${관리비 ? `<span class="chip">${esc(관리비)}</span>` : ''}
+        ${공시 ? `<span class="chip">${esc(공시)}</span>` : ''}
+        ${move ? `<span class="chip on">${esc(move)}</span>` : ''}
+      </div>
+      ${위반 ? `<div class="violation">⚠ 위반건축물</div>` : ''}
+      ${r['비고'] ? `<div class="memo">${esc(r['비고'])}</div>` : ''}
+      <div class="foot">
+        <span class="idtag">등록 ${esc(r['등록일'] || '')}</span>
+        <div style="display:flex; gap:8px; align-items:center">
+          <select onchange="changeStatus('${esc(r['매물번호'])}', this)">
+            ${['광고중','계약중','거래완료','보류'].map(s => `<option ${s === st ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="openEdit('${esc(r['매물번호'])}')">✏️ 수정</button>
+        </div>
+      </div>`;
+    wrap.appendChild(el);
+  });
+}
+
+async function changeStatus(id, sel) {
+  const v = sel.value;
+  sel.disabled = true;
+  try {
+    const res = await fetch(gasUrl, { method: 'POST', body: JSON.stringify({ action: 'update', 매물번호: id, data: { 상태: v } }) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || '실패');
+    const r = rows.find(x => String(x['매물번호']) === String(id));
+    if (r) r['상태'] = v;
+    toast(id + ' → ' + v);
+    renderCards();
+  } catch (e) { toast('상태 변경 실패: ' + e.message); }
+  sel.disabled = false;
+}
+
+// ===== 수정 모달 =====
+let editingId = null;
+// 수정 가능한 항목 (매물번호·등록일은 제외 — 자동 관리)
+const EDIT_FIELDS = [
+  ['상태','select',['광고중','계약중','거래완료','보류']],
+  ['주소','text'],['단지건물명','text'],['동호','text'],
+  ['거래유형','select',['매매','전세','월세','매매+전세','매매+월세','전세+월세']],
+  ['매매가','num'],['보증금','num'],['월세','num'],
+  ['전용면적','num'],['공급면적','num'],['대지면적','num'],['연면적','num'],
+  ['방수','num'],['욕실수','num'],['해당층','text'],['총층','text'],
+  ['방향','text'],
+  ['엘리베이터','select',['','O','X','미확인']],
+  ['주차','num'],['건폐율용적률','text'],
+  ['위반건축물','select',['','없음','해당','미확인']],
+  ['사용승인일','text'],['관리비','num'],
+  ['입주가능일','text'],
+  ['입주확정여부','select',['','확정','협의가능','미정']],
+  ['공시가격','num'],['공시가기준연도','num'],
+  ['집주인연락처','text'],['세입자연락처','text'],
+  ['비고','textarea']
+];
+
+function openEdit(id) {
+  const r = rows.find(x => String(x['매물번호']) === String(id));
+  if (!r) return toast('매물을 찾을 수 없습니다');
+  editingId = id;
+  document.getElementById('editTitle').textContent =
+    (r['단지건물명'] || r['주소'] || '매물') + ' 수정';
+  document.getElementById('editSub').textContent = id + ' · 등록 ' + (r['등록일'] || '');
+
+  const grid = document.getElementById('editGrid');
+  grid.innerHTML = '';
+  EDIT_FIELDS.forEach(([name, type, opts]) => {
+    const item = document.createElement('div');
+    item.className = 'mitem' + (type === 'textarea' ? ' full' : '');
+    const val = r[name] == null ? '' : r[name];
+    let control;
+    if (type === 'select') {
+      control = `<select id="e_${name}">${opts.map(o => `<option ${String(o) === String(val) ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    } else if (type === 'textarea') {
+      control = `<textarea id="e_${name}">${esc(val)}</textarea>`;
+    } else {
+      control = `<input id="e_${name}" ${type === 'num' ? 'type="number" step="any"' : ''} value="${esc(val)}">`;
+    }
+    item.innerHTML = `<label>${name}</label>${control}`;
+    grid.appendChild(item);
+  });
+  document.getElementById('editModal').classList.add('show');
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.remove('show');
+  editingId = null;
+}
+
+async function saveEdit() {
+  if (!editingId) return;
+  const data = {};
+  EDIT_FIELDS.forEach(([name]) => {
+    const el = document.getElementById('e_' + name);
+    if (el) data[name] = el.value;
+  });
+  setLoading('btnSaveEdit', true);
+  try {
+    const res = await fetch(gasUrl, { method: 'POST', body: JSON.stringify({ action: 'update', 매물번호: editingId, data }) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || '수정 실패');
+    // 로컬 데이터도 갱신
+    const r = rows.find(x => String(x['매물번호']) === String(editingId));
+    if (r) Object.keys(data).forEach(k => r[k] = data[k]);
+    toast(editingId + ' 수정 완료');
+    closeEdit();
+    renderCards();
+  } catch (e) { toast('수정 실패: ' + e.message); }
+  setLoading('btnSaveEdit', false);
+}
+
+async function aiSearch() {
+  const q = document.getElementById('aiQuery').value.trim();
+  if (!q) return toast('질문을 입력하세요');
+  if (rows.length === 0) await loadRows(false);
+  if (rows.length === 0) return toast('매물이 없습니다');
+  setLoading('btnAi', true);
+  try {
+    const slim = rows.map(r => {
+      const o = { 매물번호: r['매물번호'] };
+      FIELDS.forEach(f => { if (r[f] !== '' && r[f] != null) o[f] = r[f]; });
+      return o;
+    });
+    const prompt = `당신은 부동산 사무실의 매물 검색 도우미입니다. 아래 매물 목록(JSON)에서 질문 조건에 맞는 매물을 찾으세요.
+
+규칙:
+- 비고의 자유 텍스트까지 꼼꼼히 읽고 판단하세요 (집 보는 시간, 이사 사정, 조정 여지 등).
+- 금액 단위는 만원입니다 (20300 = 2억 300).
+- 조건에 딱 맞지 않아도 협의 여지가 있어 보여줄 만한 매물은 포함하되, 설명에 그 이유를 적으세요.
+- 응답은 아래 JSON 형식만, 다른 텍스트 없이 출력하세요:
+{"ids": ["M001", ...], "answer": "결과 요약과 주의할 점을 두세 문장으로"}
+- 맞는 매물이 없으면 ids는 빈 배열, answer에 이유를 쓰세요.
+
+매물 목록:
+${JSON.stringify(slim, null, 0)}
+
+질문: ${q}`;
+    const out = await callClaude(prompt);
+    const j = parseJsonLoose(out);
+    aiFilterIds = (j.ids || []).map(String);
+    const box = document.getElementById('aiAnswer');
+    box.innerHTML = esc(j.answer || '') + ' &nbsp;<a href="#" onclick="clearAi();return false" style="color:inherit;font-weight:700">해제</a>';
+    box.style.display = 'block';
+    renderCards();
+  } catch (e) { toast('AI 검색 실패: ' + e.message); }
+  setLoading('btnAi', false);
+}
+
+function clearAi() {
+  aiFilterIds = null;
+  document.getElementById('aiAnswer').style.display = 'none';
+  document.getElementById('aiQuery').value = '';
+  renderCards();
+}
+</script>
+</body>
+</html>
