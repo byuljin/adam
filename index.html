@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADAM · 아담부동산</title>
+<style>
+  :root{--ink:#16324a;--ink-soft:#4b6478;--ink-faint:#7d93a6;--sky:#3d87c8;--sky-deep:#1f5f9e;--sky-tint:#e9f2fa;--paper:#f4f7fa;--card:#fff;--line:#dbe5ee;--red:#c94f45;--gold:#b8860b;--green:#2e9e6b;--radius:12px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:var(--paper);color:var(--ink);font-family:"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;font-size:18px;line-height:1.55;-webkit-tap-highlight-color:transparent;}
+  .num{font-variant-numeric:tabular-nums;}
+  button{font-family:inherit;cursor:pointer;}
+  header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;}
+  .head-inner{max-width:920px;margin:0 auto;padding:13px 16px;display:flex;align-items:center;gap:12px;}
+  .back-btn{border:none;background:var(--sky-tint);color:var(--sky-deep);font-weight:700;border-radius:8px;padding:8px 13px;font-size:15px;display:none;}
+  .head-title{font-size:20px;font-weight:800;flex:1;}
+  .head-title .logo{color:var(--sky-deep);letter-spacing:.03em;}
+  .gear{border:none;background:none;color:var(--ink-faint);font-size:20px;padding:4px 8px;border-radius:6px;}
+  main{max-width:920px;margin:0 auto;padding:20px 16px 100px;}
+  .view{display:none;}.view.active{display:block;}
+  .hero{text-align:center;padding:32px 0 24px;}
+  .hero .mark{font-size:40px;font-weight:900;letter-spacing:.08em;color:var(--sky-deep);}
+  .hero .mark .dot{color:var(--gold);}
+  .hero .sub{font-size:15px;color:var(--ink-faint);margin-top:6px;}
+  .hero .rule{width:46px;height:3px;background:var(--gold);border-radius:2px;margin:16px auto 0;}
+  .menu{display:flex;flex-direction:column;gap:12px;max-width:470px;margin:8px auto 0;}
+  .menu-btn{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;text-align:left;transition:transform .12s,box-shadow .12s;}
+  .menu-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(31,95,158,.1);}
+  .menu-btn:disabled{opacity:.55;}
+  .menu-btn .ico{font-size:27px;width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:var(--sky-tint);border-radius:11px;}
+  .menu-btn .t{font-size:18px;font-weight:800;}
+  .menu-btn .d{font-size:13.5px;color:var(--ink-faint);margin-top:2px;}
+  .menu-btn .arw{margin-left:auto;color:var(--ink-faint);font-size:20px;}
+  .menu-btn .badge{margin-left:auto;font-size:12px;font-weight:700;color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:2px 8px;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;}
+  .panel h2{font-size:16px;font-weight:700;margin-bottom:10px;}
+  .hint{font-size:14px;color:var(--ink-faint);}
+  .ai-box{display:flex;gap:8px;}
+  .ai-box input{flex:1;border:1.5px solid var(--sky);border-radius:8px;padding:12px 14px;font:inherit;font-size:16px;}
+  .ai-answer{margin-top:10px;background:var(--sky-tint);border-radius:8px;padding:12px 14px;font-size:15px;color:var(--sky-deep);display:none;}
+  .ai-ex-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .ai-ex{font-size:13.5px;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:6px 13px;color:var(--ink-soft);}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .filters select,.filters input{border:1px solid var(--line);border-radius:7px;padding:8px 10px;font:inherit;font-size:15px;background:#fff;color:var(--ink);}
+  .filters input[type=text]{flex:1 1 140px;}
+  .filters input[type=number]{width:92px;}
+  .pl{font-size:14px;font-weight:700;color:var(--ink-soft);}
+  .pb{width:82px!important;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;font:inherit;font-weight:700;border-radius:8px;padding:12px 20px;font-size:15px;}
+  .btn-primary{background:var(--sky);color:#fff;}
+  .btn-primary:hover{background:var(--sky-deep);}
+  .btn-ghost{background:var(--sky-tint);color:var(--sky-deep);}
+  .btn-sm{padding:7px 13px;font-size:14px;}
+  .count-line{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 10px;gap:8px;flex-wrap:wrap;}
+  .count-line .cnt{font-size:14.5px;color:var(--ink-soft);font-weight:600;}
+  .count-actions{display:flex;gap:8px;}
+  .cards{display:flex;flex-direction:column;gap:11px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;transition:border-color .12s,box-shadow .12s;}
+  .card:hover{border-color:#bcd8ef;box-shadow:0 4px 16px rgba(31,95,158,.07);}
+  .card .card-head{display:flex;gap:11px;align-items:flex-start;}
+  .card .chk{width:22px;height:22px;flex:0 0 auto;margin-top:2px;cursor:pointer;accent-color:var(--sky);}
+  .card .body{flex:1;cursor:pointer;min-width:0;}
+  .card .l1{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .card .idtag{font-size:14px;color:var(--ink-faint);font-weight:600;}
+  .card .src{font-size:13px;color:var(--gold);font-weight:600;}
+  .card .reg{font-size:13px;color:var(--ink-faint);}
+  .card .stamp{font-size:12px;font-weight:700;border-radius:5px;padding:2px 8px;}
+  .stamp.진행중{color:var(--sky-deep);background:var(--sky-tint);}
+  .stamp.계약중{color:#b8860b;background:#fbf3e0;}
+  .stamp.거래완료{color:var(--red);background:#fdf1ef;}
+  .stamp.보류{color:var(--ink-faint);background:var(--paper);}
+  .card .title{font-size:18px;font-weight:800;margin-top:4px;letter-spacing:-.01em;}
+  .card .price{font-size:19px;font-weight:800;color:var(--sky-deep);margin-top:6px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+  .tt{color:#fff!important;font-size:13.5px;font-weight:700;border-radius:5px;padding:2px 9px;}
+  .tt.t-매매{background:var(--sky-deep);}
+  .tt.t-전세{background:var(--sky);}
+  .tt.t-월세{background:#6bb0e0;}
+  .tt.t-혼합{background:#8a6fc0;}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .bdg{font-size:13px;font-weight:800;border-radius:5px;padding:3px 9px;}
+  .bdg.type{color:#fff;background:var(--ink-soft);}
+  .bdg.urgent{color:#fff;background:var(--red);}
+  .bdg.lh{color:#fff;background:var(--green);}
+  .bdg.viol{color:var(--red);background:#fdf1ef;border:1px solid #f0d4d0;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+  .chip{font-size:15px;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--ink-soft);}
+  .chip.on{background:var(--sky-tint);border-color:#bcd8ef;color:var(--sky-deep);font-weight:600;}
+  .chip.warn{background:#fdf1ef;border-color:#f0d4d0;color:var(--red);}
+  .feat{margin-top:9px;font-size:16px;color:var(--ink-soft);background:var(--paper);border-radius:7px;padding:9px 11px;line-height:1.5;}
+  .empty{text-align:center;color:var(--ink-faint);padding:40px 0;font-size:15px;}
+  .detail-head{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;}
+  .detail-head .l1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .detail-head .idtag{font-size:14px;color:var(--ink-faint);font-weight:600;}
+  .detail-head .src{font-size:13px;color:var(--gold);font-weight:600;}
+  .detail-head .reg{font-size:14px;color:var(--ink-faint);}
+  .detail-head .stamp{font-size:12px;font-weight:700;border-radius:5px;padding:2px 8px;}
+  .detail-head .dp{font-size:22px;font-weight:900;color:var(--sky-deep);margin-top:10px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+  .detail-head .dt{font-size:19px;font-weight:800;margin-top:8px;}
+  .tour-table{width:100%;border-collapse:collapse;background:var(--card);margin-bottom:14px;font-size:18px;table-layout:fixed;}
+  .tour-table th{background:var(--sky-tint);color:var(--sky-deep);font-weight:700;padding:9px 6px;border:1px solid var(--line);font-size:15px;white-space:nowrap;}
+  .tour-table td{padding:11px 8px;border:1px solid var(--line);text-align:center;vertical-align:middle;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tour-table .addr-cell{font-weight:700;font-size:17px;white-space:normal;}
+  .tour-table .feat-th,.tour-table .feat-cell{width:32%;}
+  .tour-table .feat-cell{font-size:16px;color:var(--ink-soft);text-align:left;line-height:1.5;white-space:pre-line;}
+  .tour-table .broker-cell{font-size:14px;color:var(--ink-soft);white-space:normal;line-height:1.6;}
+  .tour-table .sub-head th{font-size:14px;}
+  .tour-table .sub-val td{font-size:16px;}
+  .dsec-extra{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;}
+  .ex-row{font-size:15.5px;margin:6px 0;line-height:1.55;}
+  .ex-row b{color:var(--ink-soft);margin-right:6px;}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  input.cfg{width:100%;border:1px solid var(--line);border-radius:7px;padding:11px;font:inherit;font-size:15px;}
+  .printbar{position:fixed;left:0;right:0;bottom:0;background:var(--sky-deep);color:#fff;padding:14px 16px;display:none;align-items:center;justify-content:space-between;z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,.15);}
+  .printbar.show{display:flex;}
+  .printbar .pcount{font-size:16px;font-weight:700;}
+  .printbar button{background:#fff;color:var(--sky-deep);border:none;border-radius:8px;padding:11px 20px;font-weight:800;font-size:15px;margin-left:8px;}
+  .printbar .clr{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);}
+  #toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:9px;font-size:15px;opacity:0;pointer-events:none;transition:all .25s;z-index:200;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;}
+  .btn-ghost .spinner{border-color:rgba(31,95,158,.3);border-top-color:var(--sky-deep);}
+  .loading .spinner{display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .placeholder{text-align:center;padding:50px 20px;color:var(--ink-faint);}
+  .placeholder .pi{font-size:42px;}.placeholder .pt{font-size:17px;font-weight:700;color:var(--ink-soft);margin-top:12px;}
+  @media print{
+    body{background:#fff;}
+    header,.printbar,.gear,.back-btn,#toast,.no-print,main{display:none!important;}
+    .print-only{display:block!important;}
+    .tour-print-title{font-size:18px;font-weight:800;border:2px solid #000;padding:10px;margin-bottom:8px;}
+    .tour-print-table{width:100%;border-collapse:collapse;margin-bottom:8px;page-break-inside:avoid;table-layout:fixed;}
+    .tour-print-table th{border:1.5px solid #000;padding:7px;font-size:15px;background:#eee;}
+    .tour-print-table td{border:1px solid #000;padding:9px;font-size:15px;text-align:center;vertical-align:middle;white-space:pre-line;word-break:break-all;}
+    .tour-print-table .pa{font-weight:700;font-size:16px;}
+    .tour-print-table .pf{text-align:left;font-size:14px;line-height:1.5;width:32%;}
+    .tour-print-table .pbroker{font-size:12px;color:#333;}
+    .tour-print-table .sub-head th{font-size:13px;}
+  }
+  .print-only{display:none;}
+</style>
+</head>
+<body>
+<header><div class="head-inner">
+  <button class="back-btn" id="backBtn" onclick="goHome()">← 메인</button>
+  <div class="head-title" id="headTitle"><span class="logo">ADAM</span> 아담부동산</div>
+  <button class="gear" onclick="showView('settings')">⚙</button>
+</div></header>
+<main>
+<section id="view-home" class="view active">
+  <div class="hero"><div class="mark">ADAM<span class="dot">.</span></div><div class="sub">아담부동산 업무 시스템</div><div class="rule"></div></div>
+  <div class="menu">
+    <button class="menu-btn" onclick="showView('maemul')"><span class="ico">🏠</span><span><span class="t">매물장부</span><span class="d">검색 · 조회 · 투어 리스트</span></span><span class="arw">›</span></button>
+    <button class="menu-btn" onclick="showView('sonnim')"><span class="ico">👤</span><span><span class="t">손님장부</span><span class="d">손님 조건 · 매칭</span></span><span class="arw">›</span></button>
+    <button class="menu-btn" disabled><span class="ico">📒</span><span><span class="t">거래장부</span><span class="d">완료된 거래 기록</span></span><span class="badge">준비중</span></button>
+  </div>
+</section>
+<section id="view-maemul" class="view">
+  <div class="panel">
+    <h2>주관식으로 물어보기</h2>
+    <div class="ai-box"><input id="aiQuery" placeholder="예) 엘베 있고 남향, LH 되는 곳" onkeydown="if(event.key==='Enter')aiSearch()"><button id="btnAi" class="btn btn-primary" onclick="aiSearch()"><span class="spinner"></span>AI</button></div>
+    <div class="ai-ex-wrap">
+      <button class="ai-ex" onclick="exS(this)">엘베 있는 곳</button>
+      <button class="ai-ex" onclick="exS(this)">급매</button>
+      <button class="ai-ex" onclick="exS(this)">LH 가능</button>
+      <button class="ai-ex" onclick="exS(this)">주차 가능</button>
+    </div>
+    <div id="aiAnswer" class="ai-answer"></div>
+  </div>
+  <div class="panel">
+    <h2>빠른 필터</h2>
+    <div class="filters">
+      <select id="q_상태" onchange="render()"><option value="">상태 전체</option><option>진행중</option><option>계약중</option><option>거래완료</option><option>보류</option></select>
+      <select id="q_거래유형" onchange="render()"><option value="">유형 전체</option><option>매매</option><option>전세</option><option>월세</option></select>
+      <select id="q_엘리베이터" onchange="render()"><option value="">엘베 전체</option><option>O</option><option>X</option></select>
+      <select id="q_주차" onchange="render()"><option value="">주차 전체</option><option value="가능">주차 가능</option><option value="불가">주차 불가</option></select>
+      <select id="q_LH" onchange="render()"><option value="">LH 전체</option><option value="Y">LH 가능</option></select>
+      <input id="q_방수" type="number" min="1" placeholder="방 최소" oninput="render()">
+      <input id="q_text" type="text" placeholder="주소·특징·메모 검색" oninput="render()">
+    </div>
+    <div class="filters" style="margin-top:8px">
+      <span class="pl">매매가</span><input id="q_mm_min" type="number" placeholder="최소" oninput="render()" class="pb"><span>~</span><input id="q_mm_max" type="number" placeholder="최대" oninput="render()" class="pb">
+      <span class="pl" style="margin-left:6px">월세</span><input id="q_wol_min" type="number" placeholder="최소" oninput="render()" class="pb"><span>~</span><input id="q_wol_max" type="number" placeholder="최대" oninput="render()" class="pb">
+      <span class="hint">만원 (3억=30000)</span>
+    </div>
+  </div>
+  <div class="count-line">
+    <span class="cnt" id="countLine">-</span>
+    <div class="count-actions">
+      <button class="btn btn-ghost btn-sm" onclick="checkAllVisible()">전체선택</button>
+      <button class="btn btn-ghost btn-sm" id="btnReload" onclick="load(true)"><span class="spinner"></span>새로고침</button>
+    </div>
+  </div>
+  <div class="cards" id="cards"></div>
+  <div class="empty" id="emptyMsg" style="display:none">표시할 매물이 없습니다</div>
+</section>
+<section id="view-detail" class="view">
+  <div id="detailBody"></div>
+  <div class="row-actions"><button class="btn btn-ghost" onclick="showView('maemul')">← 목록</button></div>
+</section>
+<section id="view-sonnim" class="view"><div class="placeholder"><div class="pi">👤</div><div class="pt">손님장부는 준비 중이에요</div></div></section>
+<section id="view-settings" class="view"><div class="panel">
+  <h2>연결 설정</h2><p class="hint" style="margin-bottom:8px">Apps Script 주소 (보통 한 번만)</p>
+  <input class="cfg" id="cfgUrl" placeholder="https://script.google.com/.../exec">
+  <div class="row-actions" style="margin-top:12px"><button class="btn btn-primary" onclick="saveCfg()">저장</button><button class="btn btn-ghost" id="btnTest" onclick="testConn()"><span class="spinner"></span>연결 테스트</button></div>
+</div></section>
+</main>
+<div class="printbar" id="printbar">
+  <span class="pcount" id="pcount">0개 선택</span>
+  <div><button class="clr" onclick="clearChecks()">해제</button><button onclick="printTour()">🖨 투어 리스트 인쇄</button></div>
+</div>
+<div class="print-only" id="printArea"></div>
+<div id="toast"></div>
+<script>
+const DEFAULT_GAS_URL='https://script.google.com/macros/s/AKfycbwx-S1_r4zbsi4z3tt1x6Cr8Lj9qhKyJZLKZTOHXsHa0cEdoGP61JfHy7q4_BLxCN4loQ/exec';
+let gasUrl=DEFAULT_GAS_URL, rows=[], aiIds=null, checked=new Set();
+const F=['알터 매물번호','최초 등록일','상태','매물 종류','주소','번지수','단지건물명','동호','거래유형','LH가능','매매가','보증금','월세','관리비','방수','욕실수','해당층','총층','방향','엘리베이터','주차','전용면적','공급면적','대지면적','건폐율용적률','위반건축물','사용승인일','입주가능일','공시가격','공시가기준연도','집주인연락처','세입자연락처','+중개사무소','매물특징','상세설명','비공개 메모'];
+
+(async function(){try{const r=await window.storage.get('adam:cfg');if(r&&r.value){const c=JSON.parse(r.value);if(c.gasUrl)gasUrl=c.gasUrl;}}catch(e){}document.getElementById('cfgUrl').value=gasUrl;})();
+
+function showView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');const b=document.getElementById('backBtn'),g=document.querySelector('.gear');const t={home:'<span class="logo">ADAM</span> 아담부동산',maemul:'🏠 매물장부',detail:'🏠 매물 상세',sonnim:'👤 손님장부',settings:'⚙ 설정'};document.getElementById('headTitle').innerHTML=t[n]||'ADAM';b.style.display=(n==='home')?'none':'inline-flex';g.style.display=(n==='home')?'inline-flex':'none';window.scrollTo(0,0);if(n==='maemul'&&rows.length===0)load(false);if(n==='maemul')render();}
+function goHome(){showView('home');}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
+function setL(id,on){const b=document.getElementById(id);if(b){b.classList.toggle('loading',on);b.disabled=on;}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getId(r){return r['알터 매물번호']||'';}
+function uk(n){n=Number(String(n).replace(/,/g,''));if(!n)return '';const e=Math.floor(n/10000),m=n%10000;if(e&&m)return e+'억 '+m.toLocaleString();if(e)return e+'억';return m.toLocaleString();}
+function ttCls(t){t=String(t||'');if(t.includes('매매')&&(t.includes('전세')||t.includes('월세')))return 't-혼합';if(t.includes('매매'))return 't-매매';if(t.includes('전세'))return 't-전세';if(t.includes('월세'))return 't-월세';return '';}
+function price(r){const t=String(r['거래유형']||'');const p=[];if(r['매매가'])p.push(uk(r['매매가']));if(r['월세'])p.push(uk(r['보증금'])+'/'+Number(String(r['월세']).replace(/,/g,'')).toLocaleString());else if(r['보증금'])p.push(uk(r['보증금']));return p.join(' · ')||'-';}
+function fmtY(v){if(!v&&v!==0)return '';let s=String(v).trim();const m=s.match(/(\d{4})-(\d{2})-(\d{2})T/);if(m){const d=new Date(s);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}return s;}
+function pk(v){const s=String(v||'').trim();if(s==='불가'||s==='0')return{label:'불가',cls:'warn',ok:false};if(s==='가능')return{label:'가능',cls:'on',ok:true};if(/^\d+\/\d+$/.test(s))return{label:s,cls:'on',ok:true};if(/^\d+대?$/.test(s))return{label:s,cls:'on',ok:true};const n=Number(s);if(!isNaN(n)&&s!=='')return{label:s,cls:n>0?'on':'warn',ok:n>0};return{label:s,cls:'',ok:!!s};}
+function autoElev(r){if(r['엘리베이터'])return String(r['엘리베이터']);const t=(r['매물특징']||'')+(r['상세설명']||'');return /엘베|엘리베이터|E\/V/i.test(t)?'O':'';}
+function autoPark(r){if(r['주차']!=='' && r['주차']!=null)return String(r['주차']);const t=(r['매물특징']||'')+(r['상세설명']||'');if(/주차\s*안|주차\s*불가|주차x/i.test(t))return '불가';if(/주차/.test(t))return '가능';return '';}
+function brokerShort(r){const v=String(r['+중개사무소']||'').trim();if(!v)return [];return v.split(/[\/,\n]/).map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/부동산.*$|공인중개사.*$|중개사무소.*$/,'').trim()||x).filter(Boolean);}
+
+function saveCfg(){gasUrl=document.getElementById('cfgUrl').value.trim();window.storage.set('adam:cfg',JSON.stringify({gasUrl})).then(()=>toast('저장했습니다')).catch(e=>toast('실패:'+e.message));}
+async function testConn(){const u=document.getElementById('cfgUrl').value.trim();if(!u)return toast('URL 입력');setL('btnTest',true);try{const res=await fetch(u);const d=await res.json();if(d.ok)toast('연결 성공! 매물 '+(d.rows?d.rows.length:0)+'건');else toast('형식 다름');}catch(e){toast('연결 실패: 배포 설정 확인');}setL('btnTest',false);}
+async function load(t){setL('btnReload',true);try{const res=await fetch(gasUrl);const d=await res.json();rows=(d.rows||[]).filter(r=>getId(r));aiIds=null;document.getElementById('aiAnswer').style.display='none';render();if(t)toast('불러왔습니다 ('+rows.length+'건)');}catch(e){toast('불러오기 실패:'+e.message);}setL('btnReload',false);}
+
+function render(){
+  const gv=id=>{const e=document.getElementById(id);return e&&e.value!==''?Number(e.value):null;};
+  const V=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const q={상태:V('q_상태'),거래유형:V('q_거래유형'),엘리베이터:V('q_엘리베이터'),주차:V('q_주차'),LH:V('q_LH'),방수:V('q_방수'),text:(V('q_text')||'').trim().toLowerCase(),mm_min:gv('q_mm_min'),mm_max:gv('q_mm_max'),wol_min:gv('q_wol_min'),wol_max:gv('q_wol_max')};
+  const num=v=>Number(String(v||'').replace(/,/g,''))||0;
+  const inR=(val,mn,mx)=>{if(mn===null&&mx===null)return true;const n=num(val);if(mn!==null&&n<mn)return false;if(mx!==null&&n>mx)return false;return true;};
+  let list=rows.filter(r=>{
+    if(q.상태&&String(r['상태'])!==q.상태)return false;
+    if(q.거래유형&&!String(r['거래유형']).includes(q.거래유형))return false;
+    if(q.엘리베이터&&autoElev(r)!==q.엘리베이터)return false;
+    if(q.주차){const p=pk(autoPark(r));if(autoPark(r)===''){return false;}if(q.주차==='가능'&&!p.ok)return false;if(q.주차==='불가'&&p.ok)return false;}
+    if(q.LH==='Y'&&!/Y|가능|O/i.test(String(r['LH가능']||'')))return false;
+    if(q.방수&&num(r['방수'])<q.방수)return false;
+    if(!inR(r['매매가'],q.mm_min,q.mm_max))return false;
+    if(!inR(r['월세'],q.wol_min,q.wol_max))return false;
+    if(q.text){const h=[r['주소'],r['번지수'],r['단지건물명'],r['매물 종류'],r['매물특징'],r['상세설명'],r['비공개 메모']].join(' ').toLowerCase();if(!h.includes(q.text))return false;}
+    if(aiIds&&!aiIds.includes(String(getId(r))))return false;
+    return true;
+  });
+  document.getElementById('countLine').textContent=list.length+'건 표시'+(aiIds?' (AI)':'')+' / 전체 '+rows.length+'건';
+  const wrap=document.getElementById('cards');wrap.innerHTML='';
+  document.getElementById('emptyMsg').style.display=list.length?'none':'block';
+  list.forEach(r=>{
+    const id=getId(r);
+    const el=document.createElement('div');el.className='card';
+    const 카드주소=String(r['주소']||'').replace(/^서울(특별)?시\s*/,'');
+    const title=esc([카드주소,r['번지수'],r['단지건물명'],r['동호']].filter(Boolean).join(' ')||'(주소 없음)');
+    const st=String(r['상태']||'');
+    const brokers=brokerShort(r);
+    const 종류=String(r['매물 종류']||'');
+    const 엘=autoElev(r),주=autoPark(r),주P=pk(주);
+    const 방향=String(r['방향']||'');
+    const floor=(r['해당층']||r['총층'])?`${r['해당층']||'?'}/${r['총층']||'?'}층`:'';
+    const room=(r['방수']||r['욕실수'])?`방${r['방수']||'?'}·화${r['욕실수']||'?'}`:'';
+    const 토지=/토지/.test(종류+String(r['매물특징']));
+    const area=토지?(r['대지면적']?`대지 ${(r['대지면적']/3.3058).toFixed(1)}평`:''):(r['전용면적']?`전용 ${(r['전용면적']/3.3058).toFixed(1)}평`:'');
+    const 연식=r['사용승인일']?`연식 ${fmtY(r['사용승인일'])}`:'';
+    const 등록=fmtY(r['최초 등록일'])?`등록 ${fmtY(r['최초 등록일'])}`:'';
+    const feat=String(r['매물특징']||'');
+    const txt=feat+String(r['상세설명']||'');
+    const 급매=/급매|초급매/.test(txt);
+    const LH=/Y|가능|O/i.test(String(r['LH가능']||''))||/LH|SH/.test(txt);
+    const 위반=String(r['위반건축물']||'')==='해당';
+    el.innerHTML=`
+      <div class="card-head">
+        <input type="checkbox" class="chk" ${checked.has(id)?'checked':''} onclick="toggleCheck('${esc(id)}',this)">
+        <div class="body" onclick="openDetail('${esc(id)}')">
+          <div class="l1">${st?`<span class="stamp ${esc(st)}">${esc(st)}</span>`:''}<span class="idtag num">${esc(id)}</span>${brokers.length?`<span class="src">🔗 ${esc(brokers.join(', '))}</span>`:''}${등록?`<span class="reg">${esc(등록)}</span>`:''}</div>
+          <div class="price num"><span class="tt ${ttCls(r['거래유형'])}">${esc(r['거래유형']||'-')}</span>${esc(price(r))}${급매?`<span class="bdg urgent">급매</span>`:''}</div>
+          <div class="title">${title}</div>
+          <div class="badges">
+            ${종류?`<span class="bdg type">${esc(종류)}</span>`:''}
+            ${급매?`<span class="bdg urgent">급매</span>`:''}
+            ${LH?`<span class="bdg lh">LH가능</span>`:''}
+            ${위반?`<span class="bdg viol">⚠위반건축물</span>`:''}
+          </div>
+          <div class="chips">
+            ${floor?`<span class="chip">${esc(floor)}</span>`:''}
+            ${room?`<span class="chip">${esc(room)}</span>`:''}
+            ${area?`<span class="chip">${esc(area)}</span>`:''}
+            ${방향?`<span class="chip">${esc(방향)}</span>`:''}
+            ${연식?`<span class="chip">${esc(연식)}</span>`:''}
+            ${엘?`<span class="chip ${엘==='O'?'on':'warn'}">엘베 ${esc(엘)}</span>`:''}
+            ${주!==''?`<span class="chip ${주P.cls}">주차 ${esc(주P.label)}</span>`:''}
+          </div>
+          ${feat?`<div class="feat">${esc(feat)}</div>`:''}
+        </div>
+      </div>`;
+    wrap.appendChild(el);
+  });
+  updatePrintbar();
+}
+function exS(b){document.getElementById('aiQuery').value=b.textContent;aiSearch();}
+function toggleCheck(id,cb){if(cb.checked)checked.add(id);else checked.delete(id);updatePrintbar();}
+function checkAllVisible(){document.querySelectorAll('.chk').forEach(cb=>{const oc=cb.getAttribute('onclick');const m=oc.match(/'([^']+)'/);if(m){checked.add(m[1]);cb.checked=true;}});updatePrintbar();}
+function clearChecks(){checked.clear();document.querySelectorAll('.chk').forEach(cb=>cb.checked=false);updatePrintbar();}
+function updatePrintbar(){const pb=document.getElementById('printbar');document.getElementById('pcount').textContent=checked.size+'개 선택';pb.classList.toggle('show',checked.size>0);}
+
+function openDetail(id){const r=rows.find(x=>String(getId(x))===String(id));if(!r)return;
+  const 카드주소=String(r['주소']||'').replace(/^서울(특별)?시\s*/,'');
+  const fulladdr=[카드주소,r['번지수'],r['단지건물명'],r['동호']].filter(Boolean).join(' ');
+  const st=String(r['상태']||'');
+  const brokers=brokerShort(r);
+  const 종류=String(r['매물 종류']||'');
+  const 토지=/토지/.test(종류+String(r['매물특징']));
+  const areaU=토지?(r['대지면적']?`대지 ${r['대지면적']}㎡`:''):(r['전용면적']?`전용 ${r['전용면적']}㎡`:'');
+  const price2=price(r);
+  const room=(r['방수']||r['욕실수'])?`${r['방수']||''}/${r['욕실수']||''}`:'';
+  const 층호=(r['해당층']||r['총층'])?`${r['해당층']||''}/${r['총층']||''}층 ${r['동호']||''}`.trim():'';
+  const 연식=fmtY(r['사용승인일'])||'';
+  const 등록=fmtY(r['최초 등록일'])||'';
+  const txt=String(r['매물특징']||'')+String(r['상세설명']||'');
+  const 급매=/급매|초급매/.test(txt);
+  const 엘=autoElev(r), 주OX=pk(autoPark(r)).ok?'O':(autoPark(r)==='불가'?'X':'?');
+  const featParts=[];
+  if(r['매물특징'])featParts.push(String(r['매물특징']));
+  if(r['상세설명'])featParts.push(String(r['상세설명']));
+  const tags=[]; if(/Y|가능|O/i.test(String(r['LH가능']||'')))tags.push('LH가능'); if(r['방향'])tags.push(r['방향']);
+  if(tags.length)featParts.push(tags.join(' · '));
+  const featAll=featParts.join('\n');
+  document.getElementById('detailBody').innerHTML=`
+    <div class="detail-head">
+      <div class="l1">${st?`<span class="stamp ${esc(st)}">${esc(st)}</span>`:''} <span class="idtag num">${esc(getId(r))}</span> ${brokers.length?`<span class="src">🔗 ${esc(brokers.join(', '))}</span>`:''}${등록?`<span class="reg">등록 ${esc(등록)}</span>`:''}</div>
+      <div class="dp num"><span class="tt ${ttCls(r['거래유형'])}">${esc(r['거래유형']||'-')}</span>${esc(price2)}${급매?`<span class="bdg urgent">급매</span>`:''}</div>
+      <div class="dt">${esc(fulladdr)}</div>
+    </div>
+    <table class="tour-table">
+      <tr><th>주소</th><th>가격</th><th>면적</th><th>방/화</th><th class="feat-th">특징</th><th>+중개</th></tr>
+      <tr>
+        <td rowspan="3" class="addr-cell">${esc(fulladdr)}</td>
+        <td>${esc(price2)}</td><td>${esc(areaU)}</td><td>${esc(room)}</td>
+        <td rowspan="3" class="feat-cell">${esc(featAll)}</td>
+        <td rowspan="3" class="broker-cell">${brokers.length?brokers.map(b=>esc(b)).join('<br>'):''}</td>
+      </tr>
+      <tr class="sub-head"><th>년식</th><th>층/호수</th><th>엘/주</th></tr>
+      <tr class="sub-val"><td>${esc(연식)}</td><td>${esc(층호)}</td><td>${esc(엘||'?')}/${esc(주OX)}</td></tr>
+    </table>
+    ${r['비공개 메모']||r['집주인연락처']||r['세입자연락처']?`<div class="dsec-extra">
+      ${r['집주인연락처']?`<div class="ex-row"><b>집주인</b> ${esc(r['집주인연락처'])}</div>`:''}
+      ${r['세입자연락처']?`<div class="ex-row"><b>세입자</b> ${esc(r['세입자연락처'])}</div>`:''}
+      ${r['비공개 메모']?`<div class="ex-row"><b>비공개메모</b> ${esc(r['비공개 메모'])}</div>`:''}
+    </div>`:''}`;
+  showView('detail');
+}
+
+function printTour(){
+  const sel=rows.filter(r=>checked.has(String(getId(r))));
+  if(!sel.length)return toast('선택된 매물이 없습니다');
+  let html=`<div class="tour-print-title">구하는 사람 &nbsp;&nbsp; 이름: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 연락처: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>`;
+  sel.forEach(r=>{
+    const 카드주소=String(r['주소']||'').replace(/^서울(특별)?시\s*/,'');
+    const fulladdr=[카드주소,r['번지수'],r['단지건물명'],r['동호']].filter(Boolean).join(' ');
+    const 종류=String(r['매물 종류']||'');
+    const 토지=/토지/.test(종류+String(r['매물특징']));
+    const areaU=토지?(r['대지면적']?'대지 '+r['대지면적']+'㎡':''):(r['전용면적']?'전용 '+r['전용면적']+'㎡':'');
+    const room=(r['방수']||r['욕실수'])?`${r['방수']||''}/${r['욕실수']||''}`:'';
+    const 층호=(r['해당층']||r['총층'])?`${r['해당층']||''}/${r['총층']||''}층 ${r['동호']||''}`.trim():'';
+    const 연식=fmtY(r['사용승인일'])||'';
+    const 엘=autoElev(r), 주OX=pk(autoPark(r)).ok?'O':(autoPark(r)==='불가'?'X':'?');
+    const brokers=brokerShort(r);
+    const featParts=[];
+    if(r['매물특징'])featParts.push(String(r['매물특징']));
+    if(r['상세설명'])featParts.push(String(r['상세설명']));
+    const tags=[]; if(/Y|가능|O/i.test(String(r['LH가능']||'')))tags.push('LH가능'); if(r['방향'])tags.push(r['방향']);
+    if(tags.length)featParts.push(tags.join(' · '));
+    const featAll=featParts.join('\n');
+    html+=`<table class="tour-print-table">
+      <tr><th>주소</th><th>가격</th><th>면적</th><th>방/화</th><th>특징</th><th>+중개</th></tr>
+      <tr>
+        <td rowspan="3" class="pa">${esc(fulladdr)}</td>
+        <td>${esc(price(r))}</td><td>${esc(areaU)}</td><td>${esc(room)}</td>
+        <td rowspan="3" class="pf">${esc(featAll)}</td>
+        <td rowspan="3" class="pbroker">${brokers.length?brokers.map(b=>esc(b)).join('<br>'):''}</td>
+      </tr>
+      <tr class="sub-head"><th>년식</th><th>층/호수</th><th>엘/주</th></tr>
+      <tr><td>${esc(연식)}</td><td>${esc(층호)}</td><td>${esc(엘||'?')}/${esc(주OX)}</td></tr>
+    </table>`;
+  });
+  document.getElementById('printArea').innerHTML=html;
+  window.print();
+}
+
+async function callClaude(p){const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:p}]})});const d=await res.json();if(d.error)throw new Error(d.error.message);return d.content.filter(c=>c.type==='text').map(c=>c.text).join('\n');}
+async function aiSearch(){const q=document.getElementById('aiQuery').value.trim();if(!q)return toast('질문 입력');if(rows.length===0)await load(false);if(rows.length===0)return toast('매물 없음');setL('btnAi',true);try{
+  const slim=rows.map(r=>{const o={id:getId(r)};F.forEach(f=>{if(r[f]!==''&&r[f]!=null&&f!=='알터 매물번호')o[f]=r[f];});return o;});
+  const prompt='부동산 매물 검색 도우미. 아래 JSON에서 조건에 맞는 매물의 id를 찾으세요. 매물특징·상세설명·비공개메모의 자유 텍스트까지 읽고 판단. 금액단위 만원. 응답은 JSON만: {"ids":["5570"],"answer":"요약 2-3문장"}. 없으면 ids 빈배열.\n\n매물:\n'+JSON.stringify(slim)+'\n\n질문: '+q;
+  const out=await callClaude(prompt);const j=JSON.parse(out.replace(/```json|```/g,'').trim());
+  aiIds=(j.ids||[]).map(String);const box=document.getElementById('aiAnswer');box.innerHTML=esc(j.answer||'')+' <a href="#" onclick="clearAi();return false" style="font-weight:700">해제</a>';box.style.display='block';render();
+}catch(e){toast('AI 검색 실패:'+e.message);}setL('btnAi',false);}
+function clearAi(){aiIds=null;document.getElementById('aiAnswer').style.display='none';document.getElementById('aiQuery').value='';render();}
+</script>
+</body>
+</html>
